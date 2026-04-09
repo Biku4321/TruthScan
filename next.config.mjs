@@ -1,9 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {},
+
   webpack: (config) => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
-      fs: false, // Tell webpack to ignore 'fs' on the client
+      fs: false,
       zlib: false,
     };
     return config;
