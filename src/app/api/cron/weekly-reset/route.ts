@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import connectDB from "../../../lib/db";
-import UserStats from "../../../models/UserStats";
+import connectDB from "../../../../lib/db";
+import UserStats from "../../../../models/UserStats";
 
 // This route is called by Vercel Cron every Monday at 00:00 UTC
 // Configure in vercel.json:
@@ -9,7 +9,6 @@ import UserStats from "../../../models/UserStats";
 // }
 
 export async function GET(req: Request) {
-  // Verify this request comes from Vercel Cron (not a random visitor)
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
