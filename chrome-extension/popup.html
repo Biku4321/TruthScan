@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TruthScan</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 340px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      overflow-x: hidden;
+    }
+
+    /* ---- HEADER ---- */
+    .header {
+      padding: 14px 16px;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 8px; }
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .logo-text { font-weight: 800; font-size: 15px; letter-spacing: -0.3px; }
+    .logo-text span { color: #60a5fa; }
+    .status-dot {
+      width: 8px; height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* ---- SCAN BUTTON ---- */
+    .scan-btn {
+      margin: 14px 16px;
+      width: calc(100% - 32px);
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .scan-btn:hover { opacity: 0.9; transform: scale(1.01); }
+    .scan-btn:active { transform: scale(0.99); }
+    .scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ---- STATS ROW ---- */
+    .stats-row {
+      display: flex;
+      margin: 0 16px 14px;
+      gap: 8px;
+    }
+    .stat-card {
+      flex: 1;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+    .stat-card .num {
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .stat-card .lbl {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-top: 3px;
+    }
+    .stat-card.fakes .num { color: #f87171; }
+    .stat-card.scans .num { color: #60a5fa; }
+
+    /* ---- RECENT SCANS ---- */
+    .section-title {
+      padding: 0 16px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #475569;
+    }
+    .scans-list { padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
+    .scan-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .scan-item:hover { border-color: #475569; }
+    .scan-thumb {
+      width: 40px; height: 40px;
+      border-radius: 7px;
+      object-fit: cover;
+      background: #334155;
+      flex-shrink: 0;
+    }
+    .scan-thumb.text-thumb {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .scan-thumb.audio-thumb {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .scan-info { flex: 1; min-width: 0; }
+    .scan-type {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    .scan-verdict {
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .scan-score {
+      font-size: 11px;
+      font-weight: 900;
+      font-family: monospace;
+      min-width: 34px;
+      text-align: right;
+    }
+    .fake { color: #f87171; }
+    .real { color: #4ade80; }
+
+    /* ---- TOAST ---- */
+    .toast {
+      position: fixed;
+      bottom: 12px; left: 12px; right: 12px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    .toast.show { display: flex; }
+
+    /* ---- FOOTER ---- */
+    .footer {
+      margin-top: 14px;
+      padding: 10px 16px;
+      border-top: 1px solid #1e293b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer a {
+      font-size: 11px;
+      color: #475569;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .footer a:hover { color: #94a3b8; }
+
+    .empty-state {
+      text-align: center;
+      padding: 24px 16px;
+      color: #475569;
+      font-size: 12px;
+    }
+    .empty-state .icon { font-size: 28px; margin-bottom: 6px; }
+
+    .loading-dots::after {
+      content: '';
+      animation: dots 1.2s infinite;
+    }
+    @keyframes dots {
+      0%   { content: ''; }
+      33%  { content: '.'; }
+      66%  { content: '..'; }
+      100% { content: '...'; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">🛡</div>
+      <div class="logo-text">Truth<span>Scan</span></div>
+    </div>
+    <div class="status-dot" title="System online"></div>
+  </div>
+
+  <!-- SCAN CURRENT PAGE BUTTON -->
+  <button class="scan-btn" id="scanPageBtn">
+    🔍 Scan Images on This Page
+  </button>
+
+  <!-- LIVE STATS -->
+  <div class="stats-row" id="statsRow" style="display:none">
+    <div class="stat-card scans">
+      <div class="num" id="statScans">—</div>
+      <div class="lbl">Total Scans</div>
+    </div>
+    <div class="stat-card fakes">
+      <div class="num" id="statFakes">—</div>
+      <div class="lbl">Fakes Found</div>
+    </div>
+  </div>
+
+  <!-- RECENT SCANS -->
+  <div class="section-title">Recent Scans</div>
+  <div class="scans-list" id="scansList">
+    <div class="empty-state">
+      <div class="icon">📭</div>
+      <div>No scans yet. Right-click an image to analyze it.</div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <a href="#" id="openDashboard">Open Dashboard</a>
+    <a href="#" id="openBatch">Batch Scanner</a>
+    <a href="#" id="openDocs">API Docs</a>
+  </div>
+
+  <script>
+    // ---- CONFIG ---- update this to your deployed domain
+    const API_BASE = "https://your-deployed-domain.com";
+
+    const scansList = document.getElementById("scansList");
+    const statsRow = document.getElementById("statsRow");
+    const statScans = document.getElementById("statScans");
+    const statFakes = document.getElementById("statFakes");
+    const toastEl = document.getElementById("toast");
+    const scanPageBtn = document.getElementById("scanPageBtn");
+
+    // ---- TOAST ----
+    function showToast(msg, duration = 3000) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      setTimeout(() => toastEl.classList.remove("show"), duration);
+    }
+
+    // ---- LOAD RECENT SCANS from chrome.storage.local ----
+    function loadRecentScans() {
+      chrome.storage.local.get(["recentScans", "totalScans", "fakesFound"], (data) => {
+        const scans = data.recentScans || [];
+        const total = data.totalScans || 0;
+        const fakes = data.fakesFound || 0;
+
+        if (total > 0) {
+          statsRow.style.display = "flex";
+          statScans.textContent = total;
+          statFakes.textContent = fakes;
+        }
+
+        if (scans.length === 0) {
+          scansList.innerHTML = `
+            <div class="empty-state">
+              <div class="icon">📭</div>
+              <div>No scans yet. Right-click an image to analyze it.</div>
+            </div>`;
+          return;
+        }
+
+        scansList.innerHTML = "";
+        scans.slice(0, 5).forEach((scan) => {
+          const isFake = scan.score > 50;
+          const reportUrl = `${API_BASE}/share/${scan.scanId}`;
+
+          const item = document.createElement("a");
+          item.className = "scan-item";
+          item.href = reportUrl;
+          item.target = "_blank";
+
+          const isText = scan.type === "text";
+          const isAudio = scan.type === "audio";
+
+          const thumbHtml = isText
+            ? `<div class="scan-thumb text-thumb">📝</div>`
+            : isAudio
+            ? `<div class="scan-thumb audio-thumb">🎵</div>`
+            : `<img class="scan-thumb" src="${scan.imageUrl}" onerror="this.style.display='none'" />`;
+
+          item.innerHTML = `
+            ${thumbHtml}
+            <div class="scan-info">
+              <div class="scan-type">${isText ? "Text" : isAudio ? "Audio" : "Image"}</div>
+              <div class="scan-verdict ${isFake ? "fake" : "real"}">
+                ${isFake ? "⚠ AI Detected" : "✓ Likely Real"}
+              </div>
+            </div>
+            <div class="scan-score ${isFake ? "fake" : "real"}">${scan.score}%</div>
+          `;
+          scansList.appendChild(item);
+        });
+      });
+    }
+
+    // ---- SCAN ALL IMAGES ON PAGE ----
+    scanPageBtn.addEventListener("click", () => {
+      scanPageBtn.disabled = true;
+      scanPageBtn.innerHTML = `⏳ Scanning<span class="loading-dots"></span>`;
+
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (!tabs[0]?.id) {
+          showToast("❌ No active tab found.");
+          scanPageBtn.disabled = false;
+          scanPageBtn.innerHTML = "🔍 Scan Images on This Page";
+          return;
+        }
+        // Guard: chrome:// and extension pages can't be scripted
+        const url = tabs[0].url || "";
+        if (url.startsWith("chrome://") || url.startsWith("chrome-extension://") || url.startsWith("about:")) {
+          showToast("⚠️ Can't scan browser internal pages.");
+          scanPageBtn.disabled = false;
+          scanPageBtn.innerHTML = "🔍 Scan Images on This Page";
+          return;
+        }
+        chrome.scripting.executeScript(
+          {
+            target: { tabId: tabs[0].id },
+            func: () => {
+              // Collect all image URLs on the page
+              const imgs = Array.from(document.querySelectorAll("img"))
+                .map((img) => img.src)
+                .filter((src) => src && src.startsWith("http") && !src.includes("data:"))
+                .slice(0, 10); // max 10
+              return imgs;
+            },
+          },
+          async (results) => {
+            // Handle "Receiving end does not exist" and other chrome runtime errors
+            if (chrome.runtime.lastError) {
+              console.warn("Script injection error:", chrome.runtime.lastError.message);
+              showToast("⚠️ Can't access this page. Try a regular website.");
+              scanPageBtn.disabled = false;
+              scanPageBtn.innerHTML = "🔍 Scan Images on This Page";
+              return;
+            }
+            const urls = results?.[0]?.result || [];
+            if (urls.length === 0) {
+              showToast("No images found on this page.");
+              scanPageBtn.disabled = false;
+              scanPageBtn.innerHTML = "🔍 Scan Images on This Page";
+              return;
+            }
+
+            try {
+              const res = await fetch(`${API_BASE}/api/scan/batch`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ urls }),
+              });
+              const data = await res.json();
+
+              if (data.success) {
+                showToast(`✅ Scanned ${data.analyzed} images — ${data.fakesDetected} fake${data.fakesDetected !== 1 ? "s" : ""} found`);
+
+                // Save to local storage
+                chrome.storage.local.get(["recentScans", "totalScans", "fakesFound"], (stored) => {
+                  const prev = stored.recentScans || [];
+                  const newScans = data.results
+                    .filter((r) => !r.error && r.scanId)
+                    .map((r) => ({
+                      scanId: r.scanId,
+                      imageUrl: r.imageUrl,
+                      score: r.aiScore,
+                      type: "image",
+                      ts: Date.now(),
+                    }));
+                  chrome.storage.local.set({
+                    recentScans: [...newScans, ...prev].slice(0, 20),
+                    totalScans: (stored.totalScans || 0) + data.analyzed,
+                    fakesFound: (stored.fakesFound || 0) + data.fakesDetected,
+                  }, loadRecentScans);
+                });
+              } else {
+                showToast("❌ " + (data.error || "Scan failed"));
+              }
+            } catch (err) {
+              showToast("❌ Could not connect to TruthScan server");
+            } finally {
+              scanPageBtn.disabled = false;
+              scanPageBtn.innerHTML = "🔍 Scan Images on This Page";
+            }
+          }
+        );
+      });
+    });
+
+    // ---- FOOTER LINKS ----
+    document.getElementById("openDashboard").addEventListener("click", (e) => {
+      e.preventDefault();
+      chrome.tabs.create({ url: `${API_BASE}/dashboard` });
+    });
+    document.getElementById("openBatch").addEventListener("click", (e) => {
+      e.preventDefault();
+      chrome.tabs.create({ url: `${API_BASE}/batch` });
+    });
+    document.getElementById("openDocs").addEventListener("click", (e) => {
+      e.preventDefault();
+      chrome.tabs.create({ url: `${API_BASE}/developers` });
+    });
+
+    // ---- INIT ----
+    loadRecentScans();
+
+    // Listen for scan results saved by background.js
+    chrome.storage.onChanged.addListener((changes) => {
+      if (changes.recentScans) loadRecentScans();
+    });
+  </script>
+</body>
+</html>

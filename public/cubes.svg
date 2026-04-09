@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60">
+  <rect width="60" height="60" fill="none"/>
+  <!-- cube top face -->
+  <polygon points="30,4 56,18 30,32 4,18" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+  <!-- cube left face -->
+  <polygon points="4,18 30,32 30,56 4,42" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <!-- cube right face -->
+  <polygon points="56,18 30,32 30,56 56,42" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+</svg>

@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "TruthScan - Deepfake Detector",
+  "version": "1.1",
+  "description": "Analyze images for AI manipulation directly from your browser. Right-click any image or scan the whole page.",
+  "permissions": ["contextMenus", "activeTab", "scripting", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "TruthScan"
+  },
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  }
+}
