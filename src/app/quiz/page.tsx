@@ -1,11 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
-
+import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { CheckCircle, XCircle, Trophy, ArrowRight, RefreshCw, Loader2 } from "lucide-react";
 import confetti from "canvas-confetti";
 import Link from "next/link";
 
 export default function QuizPage() {
+  const router = useRouter();
+  const { isLoaded, isSignedIn } = useAuth();
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -16,8 +19,16 @@ export default function QuizPage() {
   const [score, setScore] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
 
+  // Auth redirect
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.replace("/sign-in?redirect_url=/quiz");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
   // FETCH QUESTIONS FROM DB
   useEffect(() => {
+    if (!isSignedIn) return;
     async function fetchQuestions() {
         try {
             const res = await fetch("/api/quiz");
@@ -32,7 +43,15 @@ export default function QuizPage() {
         }
     }
     fetchQuestions();
-  }, []);
+  }, [isSignedIn]);
+
+  if (!isLoaded || !isSignedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+      </div>
+    );
+  }
 
   const currentQuestion = questions[currentIndex];
 

@@ -1,30 +1,37 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/api/scan(.*)",
-  "/api/public(.*)",    // Public API endpoints
-  "/share/(.*)",
-  "/share-target(.*)", // Web Share Target
-  "/hall-of-shame",
-  "/api/quiz(.*)",
-  "/leaderboard(.*)",  // Leaderboard is public
-  "/batch",            // Batch page - auth handled inside
-  "/developers",       // Developer docs are public
+const isProtectedRoute = createRouteMatcher([
+  "/scan(.*)",
+  "/batch(.*)",
+  "/quiz(.*)",
+  "/quiz1(.*)",
+  "/history(.*)",
+  "/profile(.*)",
+  "/developers(.*)",
+  "/dashboard(.*)",
+  "/search(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    await auth.protect();
+  const { userId } = await auth();
+  const { pathname } = req.nextUrl;
+
+  if (userId && (pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up"))) {
+    return NextResponse.redirect(new URL("/scan", req.url));
+  }
+
+
+  if (!userId && isProtectedRoute(req)) {
+    const signInUrl = new URL("/sign-in", req.url);
+    signInUrl.searchParams.set("redirect_url", pathname);
+    return NextResponse.redirect(signInUrl);
   }
 });
 
 export const config = {
   matcher: [
-    // Skip Next.js internals, static files, and the manifest
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|json)).*)",
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
   ],
 };

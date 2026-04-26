@@ -1,5 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import {
   Layers,
@@ -38,12 +40,28 @@ interface BatchResponse {
 }
 
 export default function BatchScanPage() {
+  const router = useRouter();
+  const { isLoaded, isSignedIn } = useAuth();
   const [urls, setUrls] = useState<string[]>(["", ""]);
   const [pasteMode, setPasteMode] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [results, setResults] = useState<BatchResponse | null>(null);
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.replace("/sign-in?redirect_url=/batch");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  if (!isLoaded || !isSignedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+      </div>
+    );
+  }
 
   const addUrl = () => {
     if (urls.length < 10) setUrls([...urls, ""]);

@@ -1,4 +1,4 @@
-import { Medal, Shield, Zap, Target, Crown, Search } from "lucide-react"; // <--- Imported Search here
+import { Medal, Shield, Zap, Target, Crown, Search } from "lucide-react"; 
 
 export const LEVELS = [
   { level: 1, name: "Rookie", minScore: 0 },
